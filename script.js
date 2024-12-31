@@ -1,94 +1,92 @@
-// Fungsi untuk toggle (menampilkan atau menyembunyikan) menu di perangkat kecil
+// Fungsi untuk menampilkan atau menyembunyikan menu hamburger
 function toggleMenu() {
-    const menu = document.getElementById('menu');
+    const menu = document.getElementById('menu');  // Mendapatkan elemen menu berdasarkan ID
+    
+    // Toggle kelas 'active' pada menu
+    // Jika menu sudah aktif, kelas ini akan menghilangkan menu, jika tidak, menu akan ditampilkan
     menu.classList.toggle('active');
+    
+    // Menutup menu jika area luar menu diklik (untuk menambah interaktivitas)
+    document.addEventListener('click', function(event) {
+        // Memastikan area luar menu atau ikon menu yang diklik
+        if (!menu.contains(event.target) && !event.target.matches('.menu-icon')) {
+            menu.classList.remove('active');  // Menutup menu jika klik di luar menu
+        }
+    });
 }
 
 // Fungsi untuk menampilkan halaman yang dipilih
-function showPage(page) {
-    // Mendapatkan semua halaman (section)
-    const pages = document.querySelectorAll('.page');
+function showPage(pageId) {
+    const pages = document.querySelectorAll('.page');  // Mendapatkan semua elemen dengan class 'page'
     
     // Menyembunyikan semua halaman
-    pages.forEach(pageElement => {
-        pageElement.style.display = 'none';
+    pages.forEach(page => {
+        page.style.display = 'none';  // Menyembunyikan setiap halaman
     });
-
-    // Menampilkan halaman yang dipilih
-    const selectedPage = document.getElementById(page);
-    selectedPage.style.display = 'block';
-
-    // Meng-scroll ke halaman yang dipilih
-    selectedPage.scrollIntoView({ behavior: 'smooth' });
-
+    
+    // Menampilkan halaman yang dipilih berdasarkan pageId
+    const selectedPage = document.getElementById(pageId);
+    if (selectedPage) {
+        selectedPage.style.display = 'block';  // Menampilkan halaman yang sesuai
+    }
+    
     // Menutup menu setelah memilih halaman
     const menu = document.getElementById('menu');
-    menu.classList.remove('active');
+    menu.classList.remove('active');  // Menutup menu setelah halaman dipilih
 }
-// Fungsi untuk poster
-let currentImageIndex = 0;
-const images = ['poster1.jpg', 'poster2.jpg', 'poster3.jpg']; // Pastikan urutan ini sesuai dengan gambar di HTML
 
-// Fungsi untuk membuka lightbox dengan gambar tertentu
+// Fungsi untuk mengatur tampilan lightbox (pembesar gambar)
 function openLightbox(index) {
-    // Tetapkan indeks gambar yang diklik
-    currentImageIndex = index;
-
-    // Tampilkan lightbox dan gambar yang sesuai
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightbox-img');
-
-    lightboxImg.src = images[currentImageIndex]; // Set gambar berdasarkan indeks
-    lightbox.style.display = 'flex';
+    const lightbox = document.getElementById('lightbox');  // Mendapatkan elemen lightbox
+    const lightboxImg = document.getElementById('lightbox-img');  // Mendapatkan elemen gambar dalam lightbox
+    
+    // Mengambil semua gambar proyek
+    const images = document.querySelectorAll('.project-image');
+    
+    // Menampilkan gambar yang sesuai dengan indeks
+    lightboxImg.src = images[index].src;  // Menampilkan gambar berdasarkan indeks
+    
+    // Menampilkan lightbox
+    lightbox.style.display = 'block';  // Mengubah tampilan lightbox menjadi terlihat
 }
 
 // Fungsi untuk menutup lightbox
 function closeLightbox() {
-    const lightbox = document.getElementById('lightbox');
-    lightbox.style.display = 'none';
+    const lightbox = document.getElementById('lightbox');  // Mendapatkan elemen lightbox
+    
+    // Menyembunyikan lightbox
+    lightbox.style.display = 'none';  // Mengubah tampilan lightbox menjadi tersembunyi
 }
 
-// Fungsi untuk navigasi gambar di lightbox
+// Fungsi untuk menavigasi gambar lightbox (sebelumnya/berikutnya)
 function navigateLightbox(direction) {
-    currentImageIndex += direction;
-
-    // Loop kembali ke awal atau akhir jika melewati batas
-    if (currentImageIndex < 0) {
-        currentImageIndex = images.length - 1;
-    } else if (currentImageIndex >= images.length) {
-        currentImageIndex = 0;
-    }
-
-    // Perbarui gambar di lightbox
-    const lightboxImg = document.getElementById('lightbox-img');
-    lightboxImg.src = images[currentImageIndex];
+    const lightboxImg = document.getElementById('lightbox-img');  // Mendapatkan gambar di dalam lightbox
+    
+    // Mengambil semua gambar proyek
+    const images = document.querySelectorAll('.project-image');
+    
+    // Menemukan indeks gambar saat ini di dalam lightbox
+    let currentIndex = Array.from(images).findIndex(img => img.src === lightboxImg.src);
+    
+    // Menghitung indeks gambar berikutnya atau sebelumnya berdasarkan arah
+    let newIndex = currentIndex + direction;
+    
+    // Jika indeks baru melebihi jumlah gambar, kembali ke gambar pertama atau terakhir
+    if (newIndex < 0) newIndex = images.length - 1;  // Jika ke indeks negatif, kembali ke gambar terakhir
+    if (newIndex >= images.length) newIndex = 0;  // Jika melebihi indeks gambar, kembali ke gambar pertama
+    
+    // Mengubah sumber gambar lightbox ke gambar yang dipilih
+    lightboxImg.src = images[newIndex].src;
 }
 
-// Event Listener untuk swipe (Hammer.js atau manual)
-const lightbox = document.getElementById('lightbox');
-lightbox.addEventListener('touchstart', (event) => {
-    startX = event.touches[0].clientX;
+// Event listener untuk menavigasi menggunakan swipe (untuk interaksi swipe di lightbox)
+const lightbox = document.getElementById('lightbox');  // Mendapatkan elemen lightbox
+const hammer = new Hammer(lightbox);  // Menggunakan Hammer.js untuk mendeteksi gesture swipe
+
+// Menambahkan gesture swipe untuk navigasi lightbox
+hammer.on('swipeleft', function() {
+    navigateLightbox(1);  // Swipe kiri untuk gambar berikutnya
 });
-
-lightbox.addEventListener('touchend', (event) => {
-    endX = event.changedTouches[0].clientX;
-
-    if (startX - endX > 50) {
-        navigateLightbox(1); // Geser ke kiri (next)
-    } else if (endX - startX > 50) {
-        navigateLightbox(-1); // Geser ke kanan (prev)
-    }
-});
-
-// Keyboard navigasi
-document.addEventListener('keydown', (event) => {
-    if (lightbox.style.display === 'flex') {
-        if (event.key === 'ArrowLeft') {
-            navigateLightbox(-1); // Prev
-        } else if (event.key === 'ArrowRight') {
-            navigateLightbox(1); // Next
-        } else if (event.key === 'Escape') {
-            closeLightbox(); // Tutup
-        }
-    }
+hammer.on('swiperight', function() {
+    navigateLightbox(-1);  // Swipe kanan untuk gambar sebelumnya
 });
